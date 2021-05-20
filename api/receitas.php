@@ -29,6 +29,42 @@ function getRecipes() {
 	mysqli_close($conn);
 }
 
+function getRecipeById() {
+		
+	require "config.php";
+	
+	$id = ($_GET['id'] != null && $_GET['id'] > 0 ) ? mysqli_real_escape_string($conn, (int)$_GET['id']) : false;
+
+	if (!$id) {
+		echo "Parameter ID invalid!";
+		return http_response_code(400);
+	}
+
+	$sql = "SELECT * FROM receita WHERE id={$id}";
+
+	$result = mysqli_query($conn, $sql);
+
+	if ($result === false) {
+		echo mysqli_error($conn);
+		return http_response_code(500);
+	}
+
+	$receitas = [];
+	$i = 0;
+	while($row = mysqli_fetch_assoc($result)) {
+		$receitas[$i]['id'] = $row['id'];
+		$receitas[$i]['nome'] = $row['nome'];
+		$receitas[$i]['image_url'] = $row['image_url'];
+		$receitas[$i]['descricao'] = $row['descricao'];
+		$i++;
+	}
+
+	echo json_encode($receitas);
+
+	mysqli_free_result($result);
+	mysqli_close($conn);
+}
+
 function saveRecipe() {
 
 	require "config.php";
@@ -65,7 +101,11 @@ function saveRecipe() {
 	mysqli_close($conn);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $_GET['id'] !== null) {
+	getRecipeById();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $_GET['id'] === null) {
 	getRecipes();
 }
 
