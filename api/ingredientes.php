@@ -1,31 +1,71 @@
 <?php
 
-require "config.php";
+function getRecipeIngredientes() {
 
-$id = ($_GET['id'] != null && $_GET['id'] > 0 ) ? mysqli_real_escape_string($conn, (int)$_GET['id']) : false;
+	require "config.php";
 
-if (!$id) {
-	echo "Parameter ID invalid!";
-	return http_response_code(400);
+	$id = ($_GET['id'] != null && $_GET['id'] > 0 ) ? mysqli_real_escape_string($conn, (int)$_GET['id']) : false;
+
+	if (!$id) {
+		echo "Parameter ID invalid!";
+		return http_response_code(400);
+	}
+
+	$sql = "SELECT ingrediente.* FROM ingrediente INNER JOIN receita_ingrediente ON receita_ingrediente.ingrediente_id = ingrediente.id WHERE receita_ingrediente.receita_id = {$id}";  
+
+	$result = mysqli_query($conn, $sql);
+
+	if ($result === false) {
+		echo mysqli_error();
+		return http_response_code(500);
+	}
+
+	$ingredientes = [];
+	$i = 0;
+	while ($row = mysqli_fetch_assoc($result)) {
+		$ingredientes[$i]['id'] = $row['id'];
+		$ingredientes[$i]['nome'] = $row['nome'];
+		$i++;
+	}
+
+	echo json_encode($ingredientes);
+
+	mysqli_free_result($result);
+	mysqli_close($conn);
 }
 
-$sql = "SELECT ingrediente.* FROM ingrediente INNER JOIN receita_ingrediente ON receita_ingrediente.ingrediente_id = ingrediente.id WHERE receita_ingrediente.receita_id = {$id}";  
+function getIngredientes() {
+	
+	require 'config.php';
 
-$result = mysqli_query($conn, $sql);
+	$sql = "SELECT * FROM ingrediente";
 
-if ($result === false) {
-	echo mysqli_error();
-	return http_response_code(500);
+	$result = mysqli_query($conn, $sql);
+
+	if ($result === false) {
+		echo mysqli_error();
+		return http_response_code(500);
+	}
+
+	$ingredientes = [];
+	$i = 0;
+	while ($row = mysqli_fetch_assoc($result)) {
+		$ingredientes[$i]['id'] = $row['id'];
+		$ingredientes[$i]['nome'] = $row['nome'];
+		$i++;
+	}
+
+	echo json_encode($ingredientes);
+	mysqli_free_result($result);
+	mysqli_close($conn);
 }
 
-$ingredientes = [];
-$i = 0;
-while ($row = mysqli_fetch_assoc($result)) {
-	$ingredientes[$i]['id'] = $row['id'];
-	$ingredientes[$i]['nome'] = $row['nome'];
-	$i++;
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $_GET['id'] ==! null) {
+	getRecipeIngredientes();
+} else {
+	getIngredientes();
 }
-
-echo json_encode($ingredientes);
 
 ?>
+
+
